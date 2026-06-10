@@ -1,0 +1,8 @@
+category,resolution,yes,no_cost,profit_if_no,annualized,days,volume_usd,spread,question,note,url
+meteor-REAL-baserate,CLEAN,0.290,0.71,0.408,73.4%,203.2,305882.98,0.04,5kt meteor strike in 2026?,Multi-kt airbursts ~annual (Chelyabinsk 440kt). NOT absurd; near-fair.,https://polymarket.com/event/5kt-meteor-strike-in-2026
+alien-SOFT-resolve,AMBIGUOUS,0.135,0.865,0.156,28.0%,203.2,32028129.93,0.01,Will the US confirm that aliens exist before 2027?,"Resolves on any US OFFICIAL STATEMENT, not real aliens. 13.5% is resolution-risk premium, not free.",https://polymarket.com/event/will-the-us-confirm-that-aliens-exist-before-2027
+meteor-REAL-baserate,CLEAN,0.125,0.875,0.143,25.7%,203.2,163796.74,0.01,Major meteor strike (10kt+) in 2026?,Real but rarer base rate.,https://polymarket.com/event/major-meteor-strike-10kt-in-2026
+alien-SOFT-resolve,AMBIGUOUS,0.055,0.945,0.058,19.1%,111.2,1143380.46,0.01,Will the US confirm that aliens exist by September 30?,"Same soft bar, shorter window.",https://polymarket.com/event/will-the-us-confirm-that-aliens-exist-before-2027
+meteor-REAL-baserate,CLEAN,0.064,0.936,0.068,12.3%,203.2,7887.35,0.054,100kt meteor strike in 2026?,Rare; small real prob.,https://polymarket.com/event/100kt-meteor-strike-in-2026
+meteor-REAL-baserate,CLEAN,0.030,0.9695,0.031,5.7%,203.2,108708.46,0.001,1 megaton meteor strike in 2026?,Very rare; near-0 but real.,https://polymarket.com/event/1-megaton-meteor-strike-in-2026
+religious-impossible,CLEAN,0.021,0.9785,0.022,3.9%,203.2,63655526.12,0.001,Will Jesus Christ return before 2027?,True prob ~0. Pays almost nothing.,https://polymarket.com/event/will-jesus-christ-return-before-2027
