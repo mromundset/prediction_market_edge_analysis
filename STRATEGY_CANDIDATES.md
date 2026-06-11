@@ -22,6 +22,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 | **B3** | Internal NegRisk / YES+NO Dutch-book | ~~risk-free/trade~~ **0 at snapshot speed (tested)** | $ high in aggregate | Low-latency bot | **TESTED → FAILED (no non-latency residual) — see `internal_arb_exploration/`** |
 | **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
 | **B5** | Fed markets vs CME FedWatch (ZQ) | 5–10%, intermittent | $ med ($5M/event) | Rate math + alerts | Marginal; mostly monitoring |
+| **B6** | Cross-market probability consistency | **0 (tested)** | — | Low | **TESTED → FAILED — see `cross_market_consistency_exploration/`** |
 | C6 | Favorite–longshot directional harvest | < risk-free after spread | — | Low | **No** (confirmed dead) |
 | C7 | Theta / near-certain time-decay | ~3–5% | $ low | Low | **No** (fails bar) |
 | C8 | News-latency / event-driven | n/a manually (half-life <1 min) | $ low | Pro infra | **No** without HFT stack |
@@ -255,6 +256,13 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   semi-automated operator.
 - **C9. Date-ladder logical-consistency arb** ("by June" ≤ "by July"). Real but only $94k
   captured industry-wide, liquidity-bounded. **Risk-free but no capacity. No.**
+- **B6. Cross-market probability consistency.** When A ⊆ B, P(A) ≤ P(B) must hold; violation
+  = sell A at bid, buy B at ask for a risk-free credit. Scanned 8,000+ events (5,401 non-sports,
+  2,600+ sports). Non-sports: 0 violations — PM is cross-market consistent. Sports: 10 apparent
+  hits were all false positives: "eliminated in the Final" is a mutually exclusive leg of a single
+  NegRisk categorical market, not a superset of "win" — PM's World Cup events use stage-of-elimination
+  framing, and the correct arb check (sum-of-leg-asks < $1) is B3, which already failed.
+  See `cross_market_consistency_exploration/RESULTS.md`. **0 net. No.**
 
 ### Tier D — novel angles worth a look
 
@@ -307,8 +315,11 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
    to within noise; see `crypto_ladder_d10_exploration/`.
 3. ~~**A2 contract-matcher** (Kalshi)~~ **DONE (2026-06-11) → NO-GO.** Overlap is tiny and
    the one deep match (FOMC) is efficient to within fees; see `kalshi_cross_venue_exploration/`.
-4. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4.
-5. Only if 1–4 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
+4. ~~**B6 cross-market probability ordering**~~ **DONE (2026-06-11) → NO-GO.** 0 violations
+   in 5,401 non-sports events; 10 sports hits were all classifier false positives (mutually
+   exclusive NegRisk legs, not superset/subset pairs); see `cross_market_consistency_exploration/`.
+5. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4.
+6. Only if 1–5 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
    24-7 maker) against expected, bot-compressed returns.
 
 **Honest prior:** given our own two negative results and the literature's consensus that
