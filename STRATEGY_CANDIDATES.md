@@ -20,7 +20,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 | **A1** | **Crypto digitals vs Deribit options** | ~~15–30%?~~ **≈0 (backtested + revisited)** | $ med ($0.5–2M/event) | Automation + options math | **TESTED → FAILED (×2) — residual lean = risk premium, not alpha — see `crypto_deribit_edge_exploration/`** |
 | **A2** | PM ↔ Kalshi cross-venue arb | ~~5–20%~~ **≈0.8% (backtested)** | $ low–med | Two-venue plumbing | **TESTED → FAILED — see `kalshi_cross_venue_exploration/`** |
 | **B3** | Internal NegRisk / YES+NO Dutch-book | ~~risk-free/trade~~ **0 at snapshot speed (tested)** | $ high in aggregate | Low-latency bot | **TESTED → FAILED (no non-latency residual) — see `internal_arb_exploration/`** |
-| **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
+| **B4** | Liquidity provision (Kalshi WEATHER ladders) | **+3.5% notional / cycle gross, Sharpe 0.53/day (tested)** | $ low-med (capacity ~$300k/day flow, LIP-capped) | Quoting bot (REST OK — slow market) | **TESTED → PROMISING — first gross-positive edge; see `weather_mm_feasibility_exploration/`** |
 | **B5** | Fed markets vs CME FedWatch (ZQ) | 5–10%, intermittent | $ med ($5M/event) | Rate math + alerts | Marginal; mostly monitoring |
 | **B6** | Cross-market probability consistency | **0 (tested)** | — | Low | **TESTED → FAILED — see `cross_market_consistency_exploration/`** |
 | **C3** | Kalshi macro + elections cross-venue | **+1.18% net (tested)** | $ low | Low | **TESTED → FAILED — see `kalshi_macro_elections_exploration/`** |
@@ -241,6 +241,20 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   more makers enter, the unverified APR.
 - **Verdict.** **Plausible income stream, heavy to operate.** Best in objective/short-dated
   markets where adverse selection is bounded; pair with B5/A1 markets you already monitor.
+- **POST-TEST UPDATE (2026-06-11): TESTED on KALSHI WEATHER → PROMISING (first gross-positive
+  edge).** `weather_mm_feasibility_exploration/`. Kalshi weather ladders (KXHIGHNY etc.) are
+  the ideal MM venue: liquid (~10k trades/day), objective (NWS), daily resolution (low
+  inventory horizon), and **zero maker fee** (only takers pay 0.07·p·(1−p)). Computed the
+  exact realized PnL of the passive side from 249k NYC trades (30d): **maker side +$64k =
+  +1.0¢/contract = +3.5% of notional; +$2.1k/day, 67% up-days, daily Sharpe 0.53 (~8.4 ann);
+  worst day −$2.9k.** Takers lost −$108k net (incl −$44k fees). Adverse selection is MILD and
+  slow (weather info arrives over hours, not ms) — maker PnL stays positive to <1h before
+  close; only the >24h (thin/stale) window loses. This is exactly why a non-HFT/REST maker
+  can play here where B3 (crypto, ms-latency) failed. THE OPEN QUESTION historical data can't
+  answer: capturable *share* of this aggregate pie vs incumbent bots already quoting 1¢
+  spreads. Capacity ~$300k/day flow across 5 cities; LIP rebate capped ~$7k/wk; Norway tax/
+  access frictions apply. **NEXT: forward quote-simulation/paper-trade to size captured share
+  before any capital.** This is the one strategy worth building infra for.
 
 #### B5. Fed-rate markets vs CME FedWatch / ZQ futures
 
@@ -361,8 +375,11 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
 6. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4. B5 tested
    partially as part of C3; compound gap is real but not directly tradeable (meeting-level
    overround + correlation effect). Full ZQ-based B5 could add precision.
-7. Only if 1–6 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
-   24-7 maker) against expected, bot-compressed returns.
+7. ~~Only if 1–6 underwhelm: evaluate **B3/B4**~~ **B4 TESTED (2026-06-11) → PROMISING.**
+   Kalshi WEATHER market-making is the first gross-positive edge: passive side +3.5%/notional,
+   Sharpe 0.53/day, zero maker fee, mild slow adverse selection (REST-friendly). See
+   `weather_mm_feasibility_exploration/`. **THE live next step: forward quote-simulation to
+   measure the capturable share vs incumbent bots, then size.** B3 remains a colocation game.
 
 **Honest prior:** given our own two negative results and the literature's consensus that
 liquid PM is sharp and edges are bot-captured, the base-rate expectation is that A1's gap
