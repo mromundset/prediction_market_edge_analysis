@@ -23,6 +23,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 | **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
 | **B5** | Fed markets vs CME FedWatch (ZQ) | 5–10%, intermittent | $ med ($5M/event) | Rate math + alerts | Marginal; mostly monitoring |
 | **B6** | Cross-market probability consistency | **0 (tested)** | — | Low | **TESTED → FAILED — see `cross_market_consistency_exploration/`** |
+| **C3** | Kalshi macro + elections cross-venue | **+1.18% net (tested)** | $ low | Low | **TESTED → FAILED — see `kalshi_macro_elections_exploration/`** |
 | C6 | Favorite–longshot directional harvest | < risk-free after spread | — | Low | **No** (confirmed dead) |
 | C7 | Theta / near-certain time-decay | ~3–5% | $ low | Low | **No** (fails bar) |
 | C8 | News-latency / event-driven | n/a manually (half-life <1 min) | $ low | Pro infra | **No** without HFT stack |
@@ -263,6 +264,16 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   NegRisk categorical market, not a superset of "win" — PM's World Cup events use stage-of-elimination
   framing, and the correct arb check (sum-of-leg-asks < $1) is B3, which already failed.
   See `cross_market_consistency_exploration/RESULTS.md`. **0 net. No.**
+- **C3. Kalshi macro + elections (new A2 extension).** Extended the A2 Kalshi scan to cover
+  2026 US Senate/House control markets, state governor races, daily commodity markets (gold,
+  oil, copper), 10-year Treasury yield, and the B5 Fed compound distribution. Senate/House
+  control exists on both venues and IS fungible (same resolution source). Senate prices converge
+  within fee tolerance (2pp mid-gap eaten by taker fees). House control has a 4pp mid-gap with
+  one positive-net direction (+1.18% net, +2.80%/yr) — below the risk-free rate. Kalshi macro
+  products (commodities, Treasury yield, S&P 500) have no PM equivalent. B5 Fed compound gap
+  (9.1pp raw, 6.8pp normalised) is explained by Kalshi per-meeting overround and meeting-outcome
+  correlation; not directly tradeable. See `kalshi_macro_elections_exploration/RESULTS.md`.
+  **+1.18% net max → fails risk-free hurdle. No.**
 
 ### Tier D — novel angles worth a look
 
@@ -318,8 +329,14 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
 4. ~~**B6 cross-market probability ordering**~~ **DONE (2026-06-11) → NO-GO.** 0 violations
    in 5,401 non-sports events; 10 sports hits were all classifier false positives (mutually
    exclusive NegRisk legs, not superset/subset pairs); see `cross_market_consistency_exploration/`.
-5. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4.
-6. Only if 1–5 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
+5. ~~**C3 Kalshi macro + elections**~~ **DONE (2026-06-11) → NO-GO.** Extended A2 to Senate/House
+   control, state governor races, daily commodities, 10Y yield, and B5 Fed compound. Best arb:
+   House control +1.18% net (+2.80%/yr) — below risk-free. Senate within fees. No macro overlap
+   (Kalshi-only products). See `kalshi_macro_elections_exploration/`.
+6. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4. B5 tested
+   partially as part of C3; compound gap is real but not directly tradeable (meeting-level
+   overround + correlation effect). Full ZQ-based B5 could add precision.
+7. Only if 1–6 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
    24-7 maker) against expected, bot-compressed returns.
 
 **Honest prior:** given our own two negative results and the literature's consensus that
