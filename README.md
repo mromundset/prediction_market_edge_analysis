@@ -13,6 +13,7 @@ Each exploration is a **self-contained folder** with its own code, data, and wri
 |---|---|---|
 | [`lopsided_market_scan/`](lopsided_market_scan/) | Can you profit by shorting "impossible" meme events (Jesus returns, aliens confirmed) that aren't fully priced out? | No clean, sizeable edge — see below |
 | [`meteor_strike_edge_exploration/`](meteor_strike_edge_exploration/) | Are Polymarket's 2026 meteor-strike markets mispriced vs the NASA/CNEOS record and the Brown impact-flux model? | Well-calibrated to physics; only a marginal, liquidity-capped lean — [RESULTS.md](meteor_strike_edge_exploration/RESULTS.md) |
+| [`crypto_deribit_edge_exploration/`](crypto_deribit_edge_exploration/) | Do Polymarket's daily "BTC/ETH above $K" digitals diverge tradeably from Deribit options-implied probabilities? (Strategy A1) | **No** — apparent gap was a measurement artifact; PM ≈ Deribit, no significant config — [RESULTS.md](crypto_deribit_edge_exploration/RESULTS.md) |
 
 New explorations get a new folder, ideally with a short `RESULTS.md` stating the question,
 the second source used, and the conclusion (including negative results).

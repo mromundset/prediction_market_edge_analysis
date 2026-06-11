@@ -30,6 +30,15 @@ Net return = gross edge − fees − **spread/slippage** − **capital-lockup co
 touch the stake until the market resolves) − **tax/withdrawal frictions** (for this user:
 Norwegian state monopoly, payment blocking, ~28% tax on gains >10k NOK).
 
+**Fees (current — the 0% era ended early 2025).** Maker = **0** (+ ~25% rebate of taker
+fees). Taker = `C · feeRate · p · (1−p)` per share, i.e. effective `feeRate · (1−p)` on
+the YES leg, maximal near p=0.5, ~0 at the extremes. `feeRate` by category: **Crypto 0.07,
+Econ/Culture/Weather 0.05, Finance/Politics/Tech 0.04, Sports 0.03, Geopolitics 0
+(fee-free)**. Trading is gasless (relayer-paid); no deposit/withdrawal fees. → Resting as a
+**maker is nearly free**; crossing the book on a crypto market near 50/50 costs up to ~1.8%.
+Settlement is the UMA optimistic oracle: ~2h if uncontested, but **days of lock-up + tail
+risk of adverse/ambiguous resolution** on subjective markets — prefer objective, data-resolved ones.
+
 Consequences that kill most "edges":
 - **Annualize first.** Buying NO at 0.97 to make 0.03 is a 3.1% *gross* return; if the
   market runs a year that's ~3%/yr — fails both hurdles before frictions. The most
@@ -69,10 +78,14 @@ No API key needed. Always send a `User-Agent` header (a bare request can 403).
 
 ### CLOB API — historical price time series  `https://clob.polymarket.com`
 - `prices-history?market=<clobTokenIds[0]>&interval=max&fidelity=1440` → daily YES-price
-  history (`fidelity` is in minutes; 1440 = daily). Use the **YES** token id
-  (`clobTokenIds[0]`).
+  history (`fidelity` is in minutes; 1440 = daily, **10 = intraday** for short-dated markets).
+  For a fixed window pass `&startTs=<unix>&endTs=<unix>` instead of `interval`. Use the
+  **YES** token id (`clobTokenIds[0]`). History is mid-quote only (no historical order book).
 - Use it to study price evolution, time decay, and to back out the market-implied rate
   over time (e.g. `λ = −ln(1−p)·365/days_left` for a "≥1 event in the year" market).
+- **Recurring "ladder" products** (tag `multi-strikes`=102516): daily/weekly `<coin>-above-
+  on-<month>-<d>-2026` events, ~11 strikes each, resolve on a fixed exchange candle (e.g.
+  BTC = Binance BTC/USDT 12:00 ET close). Closed events + outcomes are queryable for backtests.
 
 ### Devig (compare like-for-like)
 - **Proportional:** rescale a multi-outcome market so values sum to the true total
@@ -82,11 +95,21 @@ No API key needed. Always send a `User-Agent` header (a bare request can 403).
 - Always devig **every** venue to the **same** total before comparing, and only compare
   **identical market definitions** (e.g. "advance to R32" ≠ "reach the Round of 16").
 
-### Objective ground-truth sources (for non-sports markets)
-When a market resolves on a public dataset, that dataset — or a physical/statistical
-model of it — is your second price. Example used here: NASA/CNEOS Fireball API
-(`https://ssd-api.jpl.nasa.gov/fireball.api`, field `impact-e` = impact energy in kt),
-plus the Brown et al. (2002/2013) bolide impact-flux power law for the data-starved tail.
+### Second-price sources (free APIs, verified)
+When a market resolves on a public dataset/venue, that dataset — or a sharper market — is
+your second price:
+- **Objective datasets:** NASA/CNEOS Fireball API (`ssd-api.jpl.nasa.gov/fireball.api`,
+  field `impact-e` = kt), + Brown et al. (2002/2013) impact-flux power law for the tail.
+- **Crypto digitals → Deribit options** (deep sharp). Public REST `deribit.com/api/v2`
+  (live) and `history.deribit.com/api/v2` (expired-option **trades with per-trade IV**;
+  expiry token format `1JUN26`, not `01JUN26`). European cash-settled → digital
+  `P(S>K)=N(d2)`; or model-free Breeden–Litzenberger `−∂C/∂K`. Gotcha: PM's resolution
+  clock/index ≠ Deribit's 08:00 UTC expiry — interpolate total variance to PM's exact time.
+- **Crypto-price index** for resolution: Binance klines `api.binance.com/api/v3/klines`.
+- **Kalshi** (CFTC venue) — free no-auth market data `api.elections.kalshi.com/trade-api/v2`;
+  prices are already 0–1. Direct PM↔Kalshi cross-venue compare (match on *resolution text*).
+- **Fed/rates → CME FedWatch / ZQ fed-funds futures** (self-compute via `pyfedwatch`).
+- **Sports sharps** (Pinnacle/Betfair) are scraping-walled / API-shut (Jul-2025); paid resellers only.
 
 ## The rules for finding edges (methodology)
 
@@ -127,8 +150,21 @@ plus the Brown et al. (2002/2013) bolide impact-flux power law for the data-star
   "overpricing" matches the modern Brown-2013 flux; the only persistent lean (5/10 kt YES
   mildly underpriced) is within the base-rate CI and capped by <$15k liquidity. No
   sizeable edge.
+- **`STRATEGY_CANDIDATES.md` + `strategy_research/`** — PhD-quant strategy enumeration vs
+  the literature (liquid PM is sharp; the only large *documented* edge is bot-captured
+  internal/NegRisk arbitrage, $39.6M/yr, ~99% uncaptured). Ranked shortlist:
+  A1 crypto-vs-Deribit (tested↓) > A2 Kalshi cross-venue > B4 market-making/B3 arb-bot
+  (need latency infra) > B5 Fed-vs-FedWatch (marginal); C-tier (favorite-longshot, theta,
+  news-latency, ladder-arb) all fail the bar.
+- **`crypto_deribit_edge_exploration/`** — A1 backtest, full daily-product history (40
+  BTC/ETH events, 913 obs). **FAILED:** the live 3–6pp "gap" was a measurement artifact
+  (settlement-clock + nearest-strike IV); correctly measured (smile fit + total-variance
+  interp to PM's resolution) the body gap is ~1pp (inside spread+fee); Brier(model)≈Brier(PM)
+  — Deribit is **not** a sharper forecaster of these prints; biggest gaps were model error;
+  no config significant (|t|<1). 20 days = one regime (don't over-conclude, but no go).
 - **Bottom line so far:** Polymarket is efficient at every testable corner; nothing has
-  cleared the risk-free, let alone the index, hurdle.
+  cleared the risk-free, let alone the index, hurdle. The recurring failure mode is an
+  apparent gap that **dies on correct, settlement-aligned, like-for-like measurement.**
 
 ## Environment
 
@@ -151,5 +187,11 @@ the full market dump) is git-ignored and regenerated by the folder's fetch scrip
   confidence interval.
 - Don't calibrate a quantity from the same market you then benchmark against — circular,
   always shows "no edge" (or a fake one).
+- Don't trust a snapshot "gap" vs a second venue until it's measured **like-for-like**:
+  same resolution clock/index, vol interpolated to the *exact* resolution time, smile-fit
+  (not nearest-strike) IV, and net of spread+fee. A1's 3–6pp gap evaporated to ~1pp this way.
+- Don't read a profitable backtest leg as edge if it coincides with a one-directional spot
+  move over a short window — that's shared directional luck, not forecasting skill (check
+  realized base rate vs *both* venues, like the A1 drift check).
 - This is research tooling, **not financial advice**; Polymarket access/funding/tax in
   Norway has real frictions (state monopoly, payment blocking, ~28% tax on gains >10k NOK).

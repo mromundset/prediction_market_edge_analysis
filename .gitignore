@@ -15,3 +15,10 @@ Thumbs.db
 
 # Large, regenerable data dumps (recreate with the exploration's fetch script)
 lopsided_markets.csv
+
+# strategy research: large cached snapshot (regenerate with scan_markets.py)
+strategy_research/markets_snapshot.json
+
+# A1 backtest: bulk API cache + derived rows (regenerate with fetch_data.py / backtest.py)
+crypto_deribit_edge_exploration/data_cache/
+crypto_deribit_edge_exploration/rows.json
