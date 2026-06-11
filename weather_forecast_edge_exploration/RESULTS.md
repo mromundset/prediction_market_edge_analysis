@@ -107,12 +107,59 @@ recurring project lesson holds: where Polymarket/Kalshi is liquid, it is sharp.
 
 ---
 
+## REVISIT (5 cities, correct order-book API, per-city bias correction)
+
+Prompted by the (correct) observation that these markets are clearly liquid and that
+the first pass mis-called an API, the revisit fixed two things and broadened the test:
+
+1. **Live order-book API correction.** The live book is
+   `GET /markets/{ticker}/orderbook → {"orderbook_fp": {"yes_dollars":[[px,sz]...],
+   "no_dollars":[...]}}` — NOT `orderbook`/`yes`/`no`. Best YES bid = max yes_dollars
+   price; best YES ask = 1 − max no_dollars price. The market-OBJECT fields
+   (`yes_bid`, `volume`, `open_interest`) read null for these series; the live book,
+   trades, and candlesticks are the real source. (The *historical* backtest already
+   used candlesticks with the correct `_dollars` fields, so its prices were valid.)
+   Live depth is large: e.g. LAX T79 NO-book had 1,884 contracts @ $0.46, 2,289 @ $0.80.
+
+2. **Full ensemble + PER-CITY bias correction across 5 cities** (NYC, CHI, MIA, LAX,
+   AUS; 60 days each = 300 city-days). A live raw-ensemble check showed big divergences
+   (CHI ensemble ~5°F hot, MIA ~5°F cold vs the market) — but these are **grid-vs-station
+   bias**, not mispricing: MIA's grid cell sits over coastal water (raw ensemble 85°F vs
+   a physically-correct market ~90°F for June). Estimated per-city day-ahead bias:
+   LAX −1.86°F, MIA −1.84°F, AUS −1.04°F, NYC +0.10°F, CHI −0.04°F.
+
+After honest point-in-time (`prev_day1`) forecasting with **per-city, leave-one-out**
+bias + spread correction:
+
+| City | bias°F | market RPS | forecast RPS | diff (mkt−fc) | t | trade ret/trade |
+|---|---|---|---|---|---|---|
+| AUS | −1.04 | 0.105 | 0.150 | −0.045 | −3.0 | −13% |
+| CHI | −0.04 | 0.096 | 0.146 | −0.050 | −3.6 | −29% |
+| LAX | −1.86 | 0.077 | 0.102 | −0.025 | −2.5 | −30% |
+| MIA | −1.84 | 0.082 | 0.111 | −0.029 | −2.7 | −12% |
+| NYC | +0.10 | 0.086 | 0.121 | −0.034 | −2.3 | +8% (t=0.5) |
+| **Pooled** | | | | **−0.037** | **−6.3** | no edge |
+
+**The market beats the honest day-ahead GFS ensemble in all 5 cities** (pooled
+t = −6.3 over 300 city-days). The live divergences vanish under per-city bias
+correction. Trade sims are negative or insignificant everywhere.
+
+Remaining caveat: this is the GFS ensemble. A better model (ECMWF 51-member, MOS) is
+maybe 10–20% sharper — not enough to close a 30–50% RPS gap *and* overtake a market
+that almost certainly already prices ECMWF. The absolute ceiling — the lookahead
+same-day forecast — only reached RPS 0.064 vs market 0.085, so there is little
+headroom even with perfect information at lead 0. `live_compare.py` runs the corrected
+live book-vs-ensemble comparison for any city/day.
+
 ## Verdict
 
 **FAILED — no forecast edge.** Kalshi weather is the most promising market we found
-(liquid, objective, daily turnover, fee-bearing but tradeable), but it is already
-sharper than a genuine day-ahead numerical forecast. The apparent edge was textbook
-lookahead contamination, caught by the same point-in-time discipline that killed A1.
+(genuinely liquid, objective, daily turnover) and the first pass did mis-call the
+live-book API — but with the book parsed correctly, the full ensemble, per-city bias
+correction, and point-in-time-honest forecasts across 300 city-days, the market is
+decisively sharper than the numerical day-ahead forecast (pooled t = −6.3). The
+apparent edges were lookahead contamination (historical pass) and grid-vs-station
+bias (live pass) — both caught by the same discipline that killed A1.
 
 **Running scorecard: 10 straight negatives.**
 
