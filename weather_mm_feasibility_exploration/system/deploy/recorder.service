@@ -1,0 +1,28 @@
+# systemd unit for the Phase-0 tape recorder.
+# Install:  sudo cp recorder.service /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now recorder
+# Logs:     journalctl -u recorder -f
+# Edit User/paths to match your VM (defaults assume user 'mm', repo cloned to ~/repo).
+
+[Unit]
+Description=Kalshi weather MM Phase-0 book+trade recorder
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mm
+WorkingDirectory=/home/mm/repo/weather_mm_feasibility_exploration/system
+Environment=TAPE_DIR=/home/mm/tape
+Environment=BOOK_CADENCE_S=20
+Environment=TRADE_CADENCE_S=10
+Environment=ACTIVE_WINDOW_H=30
+ExecStart=/usr/bin/python3 /home/mm/repo/weather_mm_feasibility_exploration/system/recorder.py
+Restart=always
+RestartSec=15
+# keep journald logs bounded
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
