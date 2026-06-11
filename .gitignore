@@ -26,3 +26,6 @@ crypto_deribit_edge_exploration/rows.json
 # A2 Kalshi: bulk market dumps (regenerate with fetch_kalshi.py)
 kalshi_cross_venue_exploration/kalshi_open.json
 kalshi_cross_venue_exploration/kalshi_active.json
+
+# B3 internal arb: book cache
+internal_arb_exploration/books_cache.json

@@ -19,7 +19,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 |---|---|---|---|---|---|
 | **A1** | **Crypto digitals vs Deribit options** | ~~15–30%?~~ **≈0 (backtested)** | $ med ($0.5–2M/event) | Automation + options math | **TESTED → FAILED — see `crypto_deribit_edge_exploration/`** |
 | **A2** | PM ↔ Kalshi cross-venue arb | ~~5–20%~~ **≈0.8% (backtested)** | $ low–med | Two-venue plumbing | **TESTED → FAILED — see `kalshi_cross_venue_exploration/`** |
-| **B3** | Internal NegRisk / YES+NO Dutch-book | risk-free/trade, but ~0 without latency | $ high in aggregate | Low-latency bot | Only with infra (bot-contested) |
+| **B3** | Internal NegRisk / YES+NO Dutch-book | ~~risk-free/trade~~ **0 at snapshot speed (tested)** | $ high in aggregate | Low-latency bot | **TESTED → FAILED (no non-latency residual) — see `internal_arb_exploration/`** |
 | **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
 | **B5** | Fed markets vs CME FedWatch (ZQ) | 5–10%, intermittent | $ med ($5M/event) | Rate math + alerts | Marginal; mostly monitoring |
 | C6 | Favorite–longshot directional harvest | < risk-free after spread | — | Low | **No** (confirmed dead) |
@@ -204,6 +204,13 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   path. High build, gasless helps.
 - **Verdict.** **Only with a latency bot.** Not a manual/modeling play; it's an engineering
   race.
+- **POST-TEST UPDATE (2026-06-11): FAILED for a non-latency player.** Live both-leg
+  order-book scan (1,005 binary complete-sets + 40 NegRisk MECE sets) in
+  `internal_arb_exploration/RESULTS.md`: **zero** positive-net arbs — `ask(YES)+ask(NO)`
+  min 1.001/median 1.002 (never <$1), bid-sum never >$0.999; 37/40 Dutch-books unexecutable
+  (a leg has no NO ask). Books are bot-coherent to within the tick; the $39.6M is captured
+  in ms. No snapshot-speed/analysis edge — pursuing it = building colocated execution to
+  out-race entrenched bots.
 
 #### B4. Liquidity provision + LP rewards (market-making)
 

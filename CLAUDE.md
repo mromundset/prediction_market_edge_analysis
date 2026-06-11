@@ -171,6 +171,12 @@ your second price:
   Kalshi data API (free, no auth): `api.elections.kalshi.com/trade-api/v2`; series→events→
   markets; `yes_bid/ask_dollars` already 0–1; `rules_primary`+`settlement_sources` for
   semantic matching; quadratic fee ~0.07·p·(1−p).
+- **`internal_arb_exploration/`** — B3 (internal/NegRisk Dutch-book arb). **FAILED for a
+  non-latency player:** live both-leg scan of 1,005 binary complete-sets — `ask(YES)+ask(NO)`
+  min 1.001/median 1.002 (never <$1), bid-sum never >$0.999; books bot-coherent to the tick.
+  37/40 NegRisk MECE Dutch-books unexecutable (a leg has no NO ask). Zero positive-net arb.
+  The documented $39.6M/yr is captured in ms by bots; nothing left at REST-snapshot speed.
+  CLOB books: POST `clob.polymarket.com/books` with `[{token_id}]` → both legs' depth.
 - **Bottom line so far:** Polymarket is efficient at every testable corner; nothing has
   cleared the risk-free, let alone the index, hurdle. The recurring failure mode is an
   apparent gap that **dies on correct, settlement-aligned, like-for-like measurement.**
