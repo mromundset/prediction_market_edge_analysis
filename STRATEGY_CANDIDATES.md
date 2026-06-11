@@ -287,6 +287,19 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   correlation; not directly tradeable. See `kalshi_macro_elections_exploration/RESULTS.md`.
   **+1.18% net max → fails risk-free hurdle. No.**
 
+- **C4. Weather: Kalshi daily high-temp vs numerical forecast (2026-06-11) → FAILED.**
+  `weather_forecast_edge_exploration/`. The last "model beats crowd on objective
+  resolution" corner. Kalshi runs LIQUID daily city high-temp ladders (KXHIGHNY:
+  ~10k trades/day, OI ~8k/bucket, 1¢ spreads, MECE 6-bucket, resolved on NWS Central
+  Park — objective). Market is well-calibrated (RPS skill 0.48 vs climatology) and
+  **sharper than a genuine day-ahead GFS forecast** (market RPS 0.084 vs honest
+  prev_day1 forecast RPS 0.122, t=−2.55 against the forecast). An apparent +63%/trade
+  edge was pure LOOKAHEAD: Open-Meteo's "historical forecast" uses same-day model runs
+  (its error std 1.65°F < reanalysis 1.74°F — impossible for an honest forecast);
+  with point-in-time `temperature_2m_previous_day1` the edge inverts. Same failure
+  shape as A1. Note: PM has NO weather markets; Kalshi crypto/weather aggregate fields
+  read null but trades/candlesticks (`_dollars` fields) are real. **No. 10th negative.**
+
 ### Tier D — novel angles worth a look
 
 - **D10. Crypto ladder RND / butterfly arbitrage.** ~~Within a "BTC above $X" ladder, the
