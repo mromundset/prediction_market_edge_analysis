@@ -17,7 +17,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 
 | # | Strategy | Rough net annualized* | Capacity | Build effort | Verdict vs ~10% bar |
 |---|---|---|---|---|---|
-| **A1** | **Crypto digitals vs Deribit options** | ~~15–30%?~~ **≈0 (backtested)** | $ med ($0.5–2M/event) | Automation + options math | **TESTED → FAILED — see `crypto_deribit_edge_exploration/`** |
+| **A1** | **Crypto digitals vs Deribit options** | ~~15–30%?~~ **≈0 (backtested + revisited)** | $ med ($0.5–2M/event) | Automation + options math | **TESTED → FAILED (×2) — residual lean = risk premium, not alpha — see `crypto_deribit_edge_exploration/`** |
 | **A2** | PM ↔ Kalshi cross-venue arb | ~~5–20%~~ **≈0.8% (backtested)** | $ low–med | Two-venue plumbing | **TESTED → FAILED — see `kalshi_cross_venue_exploration/`** |
 | **B3** | Internal NegRisk / YES+NO Dutch-book | ~~risk-free/trade~~ **0 at snapshot speed (tested)** | $ high in aggregate | Low-latency bot | **TESTED → FAILED (no non-latency residual) — see `internal_arb_exploration/`** |
 | **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
@@ -154,6 +154,18 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   options market is *not* a better forecaster of these resolutions; the largest gaps were
   model error (0-for-4 on high-conviction trades); no configuration is significant
   (all |t| < 1). Revisit only per the conditions in that RESULTS.md.
+- **REVISIT (2026-06-11): A1 conclusively dead — `RESULTS_A1_REVISIT.md`.** The original
+  null was the *wrong* comparison: Deribit's N(d2) is risk-NEUTRAL (zero drift), but PM
+  prices PHYSICAL beliefs incl. crypto's risk premium. The Q→P wedge `P_P=N(d2+λT/v)` is a
+  risk premium, NOT alpha — and at the daily horizon it's ~1–2pp ATM (grows to 7pp/1wk,
+  15pp/1mo). The residual +1.2pp "PM above Deribit" lean vanishes at λ≈1.0/yr (within the
+  BTC ~66%/yr premium range). Full forecast-eval toolkit (`advanced_analysis.py`): DM with
+  HLN small-sample correction p=0.75; both venues calibrated (Spiegelhalter |z|<1); LOO
+  logit pool does NOT beat either venue OOS (no inefficiency); power analysis shows 20 days
+  IS enough to detect a 0.01 Brier edge at the 20h horizon (so the null is powered, not just
+  weak); drift-contamination corr=+0.79 (apparent skill is directional luck); FWER max-|t|
+  bootstrap over the config grid p=0.62 (nothing survives). Kalshi crypto is dead (zero
+  volume, no third venue); Deribit has 0 SOL/XRP options (can't extend instruments).
 
 #### A2. Polymarket ↔ Kalshi cross-venue arbitrage
 
