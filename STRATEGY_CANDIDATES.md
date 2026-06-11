@@ -258,11 +258,19 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
 
 ### Tier D — novel angles worth a look
 
-- **D10. Crypto ladder RND / butterfly arbitrage.** Within a "BTC above $X" ladder, the
+- **D10. Crypto ladder RND / butterfly arbitrage.** ~~Within a "BTC above $X" ladder, the
   implied probabilities must be monotone and the implied risk-neutral density non-negative
   (`P(>K−Δ) − 2P(>K) + P(>K+Δ) ≥ 0`). Butterfly violations are model-free arbitrage; and the
   PM-implied RND can be diffed wholesale against the Deribit RND. **Combines A1 + C9 in the
-  richest vein.** Test alongside A1; structural arbs are rare/bot-contested but free to scan.
+  richest vein.** Test alongside A1; structural arbs are rare/bot-contested but free to scan.~~
+  **TESTED → FAILED — see `crypto_ladder_d10_exploration/RESULTS.md`.** Key corrections:
+  the butterfly condition is a no-arb rule for *vanilla calls*, NOT binary digital options —
+  the only applicable condition is monotonicity. Historical test (47k pair-snapshots): 0.29%
+  mid-price violations, median 0.1pp, transient (<10 min, bot-corrected), not actionable.
+  Live order-book test: zero executable arbs at meaningful size (the one violation found was
+  0.18% net on a deep-ITM near-expiry market with near-zero depth). RND shape comparison (415
+  buckets, 40 events): PM and Deribit agree on distribution shape to within noise (mean diff
+  0.06pp). No tradeable edge.
 - **D11. Idle-collateral yield (not an edge, a floor-raiser).** Polymarket's reward-boosted
   (`earn-4`) structure and any USDC yield on idle collateral raise the *opportunity-cost
   floor*: park undeployed collateral productively so the strategy's hurdle is measured
@@ -294,8 +302,9 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
 
 1. ~~**A1 validation harness**~~ **DONE (2026-06-11) → NO-GO.** The measured 3–6pp body
    gap did not survive correct measurement; see `crypto_deribit_edge_exploration/`.
-2. **D10 scanner** (cheap, reuses A1 plumbing): flag ladder monotonicity/butterfly
-   violations and PM-RND vs Deribit-RND divergence.
+2. ~~**D10 scanner**~~ **DONE (2026-06-11) → NO-GO.** Monotonicity violations are transient
+   (bot-corrected), the butterfly condition was wrong for digitals, and RND shapes agree
+   to within noise; see `crypto_ladder_d10_exploration/`.
 3. ~~**A2 contract-matcher** (Kalshi)~~ **DONE (2026-06-11) → NO-GO.** Overlap is tiny and
    the one deep match (FOMC) is efficient to within fees; see `kalshi_cross_venue_exploration/`.
 4. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4.
