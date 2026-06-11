@@ -18,7 +18,7 @@ literature on prediction-market efficiency. Supporting code is in `strategy_rese
 | # | Strategy | Rough net annualized* | Capacity | Build effort | Verdict vs ~10% bar |
 |---|---|---|---|---|---|
 | **A1** | **Crypto digitals vs Deribit options** | ~~15–30%?~~ **≈0 (backtested)** | $ med ($0.5–2M/event) | Automation + options math | **TESTED → FAILED — see `crypto_deribit_edge_exploration/`** |
-| **A2** | PM ↔ Kalshi cross-venue arb | 5–20% (capacity-capped) | $ low–med | Two-venue plumbing | Plausible; access-fragile |
+| **A2** | PM ↔ Kalshi cross-venue arb | ~~5–20%~~ **≈0.8% (backtested)** | $ low–med | Two-venue plumbing | **TESTED → FAILED — see `kalshi_cross_venue_exploration/`** |
 | **B3** | Internal NegRisk / YES+NO Dutch-book | risk-free/trade, but ~0 without latency | $ high in aggregate | Low-latency bot | Only with infra (bot-contested) |
 | **B4** | Liquidity provision + LP rewards | 10–30%? (unverified, bot-contested) | $ high | 24/7 maker bot | Plausible but operationally heavy |
 | **B5** | Fed markets vs CME FedWatch (ZQ) | 5–10%, intermittent | $ med ($5M/event) | Rate math + alerts | Marginal; mostly monitoring |
@@ -177,6 +177,14 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
   Kalshi funding works *before* committing capital.
 - **Verdict.** **Second to build.** Cleanest "no-model" play, but access-fragile and
   capacity-capped.
+- **POST-TEST UPDATE (2026-06-11): FAILED validation.** Full overlap map + FOMC arb
+  computation in `kalshi_cross_venue_exploration/RESULTS.md`: the matched-and-liquid
+  intersection is tiny (~6% overlap, mostly Fed); the crypto overlap is **not fungible**
+  (Kalshi=CF BRTI @5pm vs PM=Binance @noon) and one-sided-empty; the one clean deep match
+  (FOMC decision) prices both venues within ~1pp on liquid buckets, and the best executable
+  arb net of *both* venues' fees is +0.1¢ → 0.8%/yr (unsizeable tail bucket); every liquid
+  bucket is net-negative after fees. Two-sided fees + months-long lockup + fragile Norway
+  Kalshi access sink it.
 
 ### Tier B — structurally sound but infra- or capacity-limited
 
@@ -281,8 +289,8 @@ From `scan_markets.py` / `analyze_snapshot.py` over 8,748 active events (5,838 n
    gap did not survive correct measurement; see `crypto_deribit_edge_exploration/`.
 2. **D10 scanner** (cheap, reuses A1 plumbing): flag ladder monotonicity/butterfly
    violations and PM-RND vs Deribit-RND divergence.
-3. **A2 contract-matcher** (Kalshi): pair on resolution text, log persistent net gaps; in
-   parallel, confirm Norway Kalshi funding actually works.
+3. ~~**A2 contract-matcher** (Kalshi)~~ **DONE (2026-06-11) → NO-GO.** Overlap is tiny and
+   the one deep match (FOMC) is efficient to within fees; see `kalshi_cross_venue_exploration/`.
 4. **B5 FedWatch feed** (cheap, reusable infra) feeding market selection for A2/B4.
 5. Only if 1–4 underwhelm: evaluate the engineering investment for **B3/B4** (latency bot /
    24-7 maker) against expected, bot-compressed returns.

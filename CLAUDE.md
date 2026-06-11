@@ -162,6 +162,15 @@ your second price:
   interp to PM's resolution) the body gap is ~1pp (inside spread+fee); Brier(model)≈Brier(PM)
   — Deribit is **not** a sharper forecaster of these prints; biggest gaps were model error;
   no config significant (|t|<1). 20 days = one regime (don't over-conclude, but no go).
+- **`kalshi_cross_venue_exploration/`** — A2 (PM↔Kalshi cross-venue arb). **FAILED:** Kalshi
+  is ~60k zero-liquidity sports parlays + a thin macro overlap (~6%). Crypto overlap is NOT
+  fungible (Kalshi=CF BRTI @5pm EDT vs PM=Binance @noon ET) and one-sided-empty. The one
+  deep matched overlap (FOMC decision; Kalshi resolves on the Fed, like PM) is efficient to
+  ~1pp; best executable arb net of *both* fee schedules = +0.1¢ → 0.8%/yr (unsizeable tail);
+  liquid buckets net-negative. Two-sided fees + months lockup + fragile Norway Kalshi access.
+  Kalshi data API (free, no auth): `api.elections.kalshi.com/trade-api/v2`; series→events→
+  markets; `yes_bid/ask_dollars` already 0–1; `rules_primary`+`settlement_sources` for
+  semantic matching; quadratic fee ~0.07·p·(1−p).
 - **Bottom line so far:** Polymarket is efficient at every testable corner; nothing has
   cleared the risk-free, let alone the index, hurdle. The recurring failure mode is an
   apparent gap that **dies on correct, settlement-aligned, like-for-like measurement.**
