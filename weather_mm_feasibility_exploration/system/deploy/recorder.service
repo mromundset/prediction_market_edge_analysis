@@ -13,6 +13,7 @@ Wants=network-online.target
 Type=simple
 User=mm
 WorkingDirectory=/home/mm/repo/weather_mm_feasibility_exploration/system
+Environment=PYTHONUNBUFFERED=1
 Environment=TAPE_DIR=/home/mm/tape
 Environment=BOOK_CADENCE_S=20
 Environment=TRADE_CADENCE_S=10
